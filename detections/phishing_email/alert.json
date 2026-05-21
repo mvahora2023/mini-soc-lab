@@ -1,0 +1,132 @@
+{
+  "_comment": "SYNTHETIC DATA — fabricated for portfolio demonstration only. Not a real alert.",
+  "alert_name": "Phishing Email Campaign — Auth Failure + Suspicious Attachment or Link",
+  "alert_id": "PHISH-EMAIL-001",
+  "severity": "High",
+  "confidence": "Medium",
+  "escalation_condition": "Critical if proxy POST event follows email delivery (credential submission suspected)",
+  "mitre_technique": {
+    "tactic": "Initial Access",
+    "tactic_id": "TA0001",
+    "technique": "Phishing",
+    "technique_id": "T1566",
+    "sub_techniques": [
+      { "id": "T1566.001", "name": "Spearphishing Attachment" },
+      { "id": "T1566.002", "name": "Spearphishing Link" }
+    ]
+  },
+  "description": "Detects phishing email campaigns targeting internal users based on email authentication failures (SPF/DKIM/DMARC) combined with high-risk attachment types or suspicious URLs. A secondary proxy-layer signal fires when a user clicks a URL from a suspicious email and submits a form (GET + POST pattern), indicating possible credential harvesting.",
+  "variants": [
+    {
+      "variant_id": "A",
+      "name": "Spearphishing Attachment",
+      "mitre_sub_technique": "T1566.001",
+      "description": "Email fails SPF and DKIM, contains a macro-enabled or high-risk attachment, and was sent to 2+ recipients from the same source.",
+      "threshold": "SPFResult IN (FAIL, SOFTFAIL) AND DKIMResult IN (FAIL, NONE) AND AttachmentExtension IN high_risk_list AND RecipientCount >= 2",
+      "default_action": "QUARANTINE email; alert analyst"
+    },
+    {
+      "variant_id": "B1",
+      "name": "Spearphishing Link — Gateway",
+      "mitre_sub_technique": "T1566.002",
+      "description": "Email delivered despite SPF/DKIM failure; contains URLs with uncategorised, newly-registered, or suspicious domains.",
+      "threshold": "SPFResult IN (FAIL, SOFTFAIL) AND URLCount > 0 AND URLCategory IN (UNCATEGORIZED, NEWLY_REGISTERED, SUSPICIOUS, PHISHING) AND RecipientCount >= 2",
+      "default_action": "Alert analyst; consider retrospective quarantine"
+    },
+    {
+      "variant_id": "B2",
+      "name": "Spearphishing Link — Proxy Click",
+      "mitre_sub_technique": "T1566.002",
+      "description": "User clicked a URL from a suspicious email; proxy logs show HTTP GET followed by POST within 60 seconds — consistent with form submission to a credential harvester.",
+      "threshold": "ProxyGET to uncategorised/suspicious URL + ProxyPOST to same host within 60 seconds, correlated to prior suspicious email delivery",
+      "default_action": "Escalate to Critical; initiate credential compromise response"
+    }
+  ],
+  "required_fields": [
+    {
+      "field": "Timestamp",
+      "description": "Time the email was processed by the gateway or click was logged by proxy."
+    },
+    {
+      "field": "From",
+      "description": "Envelope sender address. Check domain against known-legitimate list and lookalike patterns."
+    },
+    {
+      "field": "To",
+      "description": "Recipient address. Used for campaign breadth calculation and targeted account triage."
+    },
+    {
+      "field": "SPFResult",
+      "description": "SPF authentication result: PASS, FAIL, SOFTFAIL, NONE. FAIL or SOFTFAIL required to fire."
+    },
+    {
+      "field": "DKIMResult",
+      "description": "DKIM signature validation: PASS, FAIL, NONE. FAIL or NONE required (with SPF FAIL) to fire."
+    },
+    {
+      "field": "DMARCResult",
+      "description": "DMARC policy result and enforcement action. Determines whether gateway blocked or delivered."
+    },
+    {
+      "field": "AttachmentName",
+      "alias": "AttachmentExtension",
+      "description": "Attachment filename; extension is matched against high-risk list. Required for Variant A."
+    },
+    {
+      "field": "AttachmentHash",
+      "description": "SHA-256 of attachment. Used for campaign correlation (same hash across recipients) and IOC submission."
+    },
+    {
+      "field": "URL",
+      "description": "URLs extracted from email body. Domain used for category lookup and proxy correlation. Required for Variant B."
+    }
+  ],
+  "enrichment_steps": [
+    "WHOIS / passive DNS lookup on sender domain: check registration date, registrar, and nameservers.",
+    "Threat intel lookup on SourceIP: check for prior phishing infrastructure, bulletproof hosting, or known malicious ASN.",
+    "Threat intel lookup on AttachmentHash: check against public sandbox reports (e.g., VirusTotal) for known malware family.",
+    "Threat intel lookup on URL domain: check for prior phishing reports, certificate transparency (new cert = new domain), and hosting details.",
+    "Correlate URL with proxy logs: identify all users who received the email and determine which clicked.",
+    "For Variant B2: check Active Directory for recent successful logons for affected users — credential submission may precede unauthorized access."
+  ],
+  "recommended_actions": [
+    {
+      "priority": 1,
+      "action": "Quarantine or recall all emails in campaign",
+      "detail": "For Variant A: confirm gateway quarantine is in place. For Variant B: initiate email recall from all recipient mailboxes if the gateway supports it. Prevent users from accessing the email."
+    },
+    {
+      "priority": 2,
+      "action": "Block sender domain and source IP at the email gateway",
+      "detail": "Add sender domain (e.g., hr-documents.example) and SourceIP (203.0.113.20) to the gateway blocklist. These should be scoped to block, not tag-and-deliver."
+    },
+    {
+      "priority": 3,
+      "action": "Block URL and URL domain at the web proxy",
+      "detail": "Add the phishing URL and its domain to the proxy blocklist. For per-recipient token URLs, block at the domain level."
+    },
+    {
+      "priority": 4,
+      "action": "Block attachment hash at email gateway and EDR",
+      "detail": "For Variant A: submit AttachmentHash to EDR custom IOC list and email gateway attachment blocklist. Prevents re-delivery or execution on endpoints."
+    },
+    {
+      "priority": 5,
+      "action": "Force password reset for users who clicked and submitted (Variant B2)",
+      "detail": "Users with a POST event in proxy logs should be treated as potentially compromised. Force immediate password reset and verify MFA is enrolled before re-enabling access. Check for active sessions originating from unexpected IPs."
+    },
+    {
+      "priority": 6,
+      "action": "Notify all recipients",
+      "detail": "Send a targeted security notification to all users who received the phishing email, explaining what to do if they clicked or opened the attachment. Do not use a public-facing announcement — targeted awareness reduces secondary incidents."
+    }
+  ],
+  "false_positive_notes": "Common benign triggers: marketing platforms with poor email auth hygiene, phishing simulation campaigns (allowlist simulation vendor IPs), vendor invoice emails from shared SMTP infrastructure. See detection.md for full guidance.",
+  "related_artifacts": [
+    "detections/phishing_email/background.md",
+    "detections/phishing_email/detection.md",
+    "detections/phishing_email/simulated_logs.log",
+    "triage-reports/phishing_001.md",
+    "playbooks/phishing_playbook.md"
+  ]
+}

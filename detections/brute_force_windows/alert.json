@@ -1,0 +1,105 @@
+{
+  "_comment": "SYNTHETIC DATA — fabricated for portfolio demonstration only. Not a real alert.",
+  "alert_name": "Windows Brute Force — Excessive Failed Logons (4625)",
+  "alert_id": "BF-WIN-001",
+  "severity": "High",
+  "confidence": "Medium",
+  "mitre_technique": {
+    "tactic": "Credential Access",
+    "tactic_id": "TA0006",
+    "technique": "Brute Force",
+    "technique_id": "T1110",
+    "sub_techniques": [
+      { "id": "T1110.001", "name": "Password Guessing" },
+      { "id": "T1110.003", "name": "Password Spraying" }
+    ]
+  },
+  "description": "Detects an abnormal number of Windows EventID 4625 (failed logon) events from a single source IP within a short time window, indicating a likely automated brute force or password spray attempt against Windows authentication services (SMB, RDP, NTLM).",
+  "variants": [
+    {
+      "variant_id": "A",
+      "name": "Password Guessing",
+      "description": "High failure rate from one source IP against one target account.",
+      "threshold": "More than 10 EventID=4625 events from the same SourceIP targeting the same TargetUser within 5 minutes."
+    },
+    {
+      "variant_id": "B",
+      "name": "Password Spray",
+      "description": "Low-and-slow failures from one source IP spread across many distinct accounts.",
+      "threshold": "5 or more distinct TargetUsers failed against from the same SourceIP within 30 minutes, with no more than 3 failures per individual account."
+    }
+  ],
+  "required_fields": [
+    {
+      "field": "EventID",
+      "expected_value": "4625",
+      "description": "Windows Security log event for failed logon."
+    },
+    {
+      "field": "IpAddress",
+      "alias": "SourceIP",
+      "description": "Source IP address of the authentication request. Must be present and non-null; local system logons (127.0.0.1 or ::1) are excluded."
+    },
+    {
+      "field": "TargetUserName",
+      "alias": "TargetUser",
+      "description": "Account name being authenticated. Exclude machine accounts (names ending in $)."
+    },
+    {
+      "field": "TimeGenerated",
+      "alias": "Timestamp",
+      "description": "Event timestamp used to calculate the sliding time window."
+    },
+    {
+      "field": "LogonType",
+      "description": "Integer logon type. Focus on 3 (Network) and 10 (RemoteInteractive/RDP). Exclude 5 (Service) and 4 (Batch) to reduce scheduled-task false positives."
+    },
+    {
+      "field": "SubStatus",
+      "description": "Hex failure reason code. 0xC000006A (wrong password) and 0xC0000064 (bad username) are most relevant."
+    }
+  ],
+  "enrichment_steps": [
+    "Resolve SourceIP to hostname and check against known-asset inventory.",
+    "Check SourceIP against threat intel feeds for prior malicious activity.",
+    "Determine if TargetUser account is privileged (admin, service, domain admin).",
+    "Look for a subsequent EventID=4624 (successful logon) from the same SourceIP — confirms compromise.",
+    "Check TargetUser account lockout status (EventID 4740).",
+    "Review LogonType to identify attacked service (3=SMB, 10=RDP)."
+  ],
+  "recommended_actions": [
+    {
+      "priority": 1,
+      "action": "Block source IP",
+      "detail": "Add SourceIP to perimeter firewall deny list or EDR network isolation policy. Confirm with threat intel before blocking shared egress IPs (NAT, VPN)."
+    },
+    {
+      "priority": 2,
+      "action": "Investigate TargetUser account(s)",
+      "detail": "Review recent logon history for targeted accounts. Check for EventID=4624 success from the same SourceIP. If compromised, disable account and initiate password reset."
+    },
+    {
+      "priority": 3,
+      "action": "Review account lockout policy",
+      "detail": "Verify lockout threshold is configured and appropriate. Typical recommendation: lock after 10 failures, reset counter after 15 minutes."
+    },
+    {
+      "priority": 4,
+      "action": "Assess exposed attack surface",
+      "detail": "Confirm whether RDP (3389) or SMB (445) are exposed to untrusted networks. Restrict to VPN-only or internal segments if not already done."
+    },
+    {
+      "priority": 5,
+      "action": "Escalate if success detected",
+      "detail": "If EventID=4624 follows the burst of 4625s from the same SourceIP, escalate immediately to Tier 2 / Incident Response and begin containment."
+    }
+  ],
+  "false_positive_notes": "Common benign triggers: cached credentials after a password rotation, scheduled tasks with outdated credentials (use LogonType filter to exclude 4 and 5), helpdesk bulk account testing, VPN gateway retries. See detection.md for full false positive guidance.",
+  "related_artifacts": [
+    "detections/brute_force_windows/background.md",
+    "detections/brute_force_windows/detection.md",
+    "detections/brute_force_windows/simulated_logs.log",
+    "triage-reports/brute_force_001.md",
+    "playbooks/brute_force_playbook.md"
+  ]
+}

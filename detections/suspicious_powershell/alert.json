@@ -1,0 +1,131 @@
+{
+  "_comment": "SYNTHETIC DATA — fabricated for portfolio demonstration only. Not a real alert.",
+  "alert_name": "Suspicious PowerShell Execution — Obfuscation or Anomalous Parent",
+  "alert_id": "PS-EXEC-001",
+  "severity": "High",
+  "confidence": "High",
+  "escalation_condition": "Critical if 4104 Script Block contains download cradle or network socket pattern, OR if child processes indicate active domain enumeration",
+  "mitre_technique": {
+    "tactic": "Execution",
+    "tactic_id": "TA0002",
+    "technique": "Command and Scripting Interpreter",
+    "technique_id": "T1059",
+    "sub_technique": {
+      "id": "T1059.001",
+      "name": "PowerShell"
+    },
+    "related_techniques": [
+      { "id": "T1027",   "name": "Obfuscated Files or Information",         "relevance": "Encoded commands obscure payload from command-line logging" },
+      { "id": "T1105",   "name": "Ingress Tool Transfer",                   "relevance": "Download cradles fetch second-stage payloads into memory" },
+      { "id": "T1033",   "name": "System Owner / User Discovery",           "relevance": "whoami child process from PowerShell" },
+      { "id": "T1087",   "name": "Account Discovery",                       "relevance": "net user /domain child process from PowerShell" },
+      { "id": "T1482",   "name": "Domain Trust Discovery",                  "relevance": "nltest /domain_trusts child process from PowerShell" },
+      { "id": "T1016",   "name": "System Network Configuration Discovery",  "relevance": "ipconfig, arp child processes from PowerShell" }
+    ]
+  },
+  "description": "Detects adversary abuse of PowerShell through three complementary signals: (A) PowerShell spawned by a high-risk parent process such as an Office application or script host; (B) PowerShell executed with an obfuscation flag combination (encoded command, execution policy bypass, hidden window) scoring above threshold; (C) PowerShell spawning discovery or staging child processes consistent with post-exploitation enumeration.",
+  "variants": [
+    {
+      "variant_id": "A",
+      "name": "Suspicious Parent Process",
+      "description": "powershell.exe or pwsh.exe spawned by an Office application, browser, or script host with no legitimate reason to invoke a scripting engine.",
+      "threshold": "Any single instance of WINWORD.EXE, EXCEL.EXE, OUTLOOK.EXE, mshta.exe, wscript.exe, cscript.exe, or regsvr32.exe as parent of powershell.exe.",
+      "false_positive_rate": "Very Low",
+      "default_severity": "High"
+    },
+    {
+      "variant_id": "B",
+      "name": "Obfuscation Flag Combination",
+      "description": "powershell.exe command line contains multiple evasion flags that together indicate intent to hide execution.",
+      "threshold": "Flag score >= 4 using the weighted scoring in detection.md: -EncodedCommand (+3), -ExecutionPolicy Bypass (+2), -WindowStyle Hidden (+2), -NonInteractive (+1), -NoProfile (+1).",
+      "false_positive_rate": "Low",
+      "default_severity": "High"
+    },
+    {
+      "variant_id": "C",
+      "name": "Suspicious Child Processes",
+      "description": "powershell.exe spawns 2 or more discovery or staging binaries within a short time window.",
+      "threshold": "ChildCount >= 2 of {whoami, net.exe, nltest, ipconfig, ping, certutil, bitsadmin, wmic, vssadmin, bcdedit, schtasks, reg.exe} from the same parent PowerShell PID within 5 minutes.",
+      "false_positive_rate": "Medium",
+      "default_severity": "High"
+    }
+  ],
+  "required_fields": [
+    {
+      "field": "Image",
+      "description": "Full path of the spawned process. Must match powershell.exe or pwsh.exe for Variants A and B; any discovery binary for Variant C."
+    },
+    {
+      "field": "ParentImage",
+      "description": "Full path of the parent process. Used to classify the parent as suspicious (Variant A) or as powershell.exe (Variant C)."
+    },
+    {
+      "field": "CommandLine",
+      "description": "Full command line of the spawned process. Required for flag scoring (Variant B) and child process classification (Variant C). Requires command-line auditing enabled in GPO."
+    },
+    {
+      "field": "ParentCommandLine",
+      "description": "Full command line of the parent process. Required to correlate the spawning context for Variants A and B."
+    },
+    {
+      "field": "SubjectUser",
+      "description": "The user account under which the process ran. Used for privilege context (SYSTEM vs standard user) and anomaly detection (service account running interactive PowerShell)."
+    },
+    {
+      "field": "IntegrityLevel",
+      "description": "Process integrity level (Low, Medium, High, System). High integrity for a standard user is anomalous and escalates severity."
+    },
+    {
+      "field": "Timestamp",
+      "description": "Process creation time. Used for time-of-day anomaly detection and multi-event correlation."
+    },
+    {
+      "field": "ScriptBlockText",
+      "source": "EventID 4104",
+      "description": "Decoded PowerShell script content. Optional but high-fidelity — reveals encoded payload, download cradles, and AMSI bypass attempts."
+    }
+  ],
+  "enrichment_steps": [
+    "Decode the -EncodedCommand value (base64 UTF-16LE decode) and inspect the plaintext. Look for IEX, DownloadString, WebClient, TCPClient, or Reflection.Assembly.",
+    "Correlate ProcessId from 4688 with EventID 4104 ScriptBlockId to retrieve decoded script content if Script Block Logging is enabled.",
+    "Check for Sysmon EventID 3 (Network Connection) from the same ProcessId — outbound connections from powershell.exe direct to IPs (not hostnames) are a strong download-cradle indicator.",
+    "Review the full process tree: what spawned the parent, and what did PowerShell subsequently spawn?",
+    "For Scenario B (svchost parent): identify the scheduled task name by querying EventID 4698 (scheduled task creation) or examining Task Scheduler logs around the same timestamp.",
+    "Check SubjectUser privilege level: a service account (svc_account1) running interactive PowerShell with High integrity outside business hours is a critical escalation signal."
+  ],
+  "recommended_actions": [
+    {
+      "priority": 1,
+      "action": "Isolate the host if active download or C2 connection is confirmed",
+      "detail": "If Sysmon EventID 3 shows an outbound connection from powershell.exe, or 4104 contains a network socket or download cradle, immediately isolate WORKSTATION-01 via EDR network isolation to prevent data exfiltration or further payload staging."
+    },
+    {
+      "priority": 2,
+      "action": "Kill the suspicious PowerShell process",
+      "detail": "Terminate the identified powershell.exe PID via EDR. Do not simply close the window — terminate by PID to prevent the process from completing its payload if still running."
+    },
+    {
+      "priority": 3,
+      "action": "Collect and preserve forensic artifacts",
+      "detail": "Before remediation: acquire process memory dump of the PowerShell PID, collect the 4104 script block text, export Sysmon and Security event logs for the host for the incident window."
+    },
+    {
+      "priority": 4,
+      "action": "Investigate the parent process and delivery vector",
+      "detail": "For Scenario A: identify the source document (Q4_Bonus_Statement.docm) — retrieve from quarantine or user's Downloads folder. For Scenario B: enumerate all scheduled tasks on the host and identify the task that triggered svchost to spawn PowerShell at 02:47."
+    },
+    {
+      "priority": 5,
+      "action": "Review affected user account and service account",
+      "detail": "For LAB\\user1 (Scenario A): check for credential exposure — was the payload a stealer? For LAB\\svc_account1 (Scenario B): audit all logon events, check for new scheduled tasks, services, or registry run keys created under this account."
+    }
+  ],
+  "false_positive_notes": "Common benign triggers: SCCM/Intune agent deployments (parent: CCMExec.exe, user: SYSTEM), RMM tools (ConnectWise, Kaseya), developer build toolchains (node.exe, cargo.exe), IT admin scripts using -ep bypass for legitimate deployment. See detection.md for full guidance and allowlist templates.",
+  "related_artifacts": [
+    "detections/suspicious_powershell/background.md",
+    "detections/suspicious_powershell/detection.md",
+    "detections/suspicious_powershell/simulated_logs.log",
+    "triage-reports/powershell_001.md"
+  ],
+  "playbook": "Not yet created — see playbooks/ directory for brute force and phishing playbook templates to use as a starting structure."
+}

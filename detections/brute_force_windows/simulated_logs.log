@@ -1,0 +1,56 @@
+# ==============================================================================
+# SYNTHETIC DATA — DO NOT USE IN PRODUCTION
+# All entries are fabricated for portfolio/lab demonstration only.
+# IPs: RFC 5737 documentation range (203.0.113.0/24)
+# Usernames: generic placeholders only
+# Host: DC-01 (simulated Windows Server 2019 domain controller)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# SCENARIO A: Password Guessing — Single user (admin1), single source IP
+# Pattern: 20 failed logons in ~90 seconds → clear brute force threshold breach
+# ------------------------------------------------------------------------------
+
+2024-11-14T08:31:02Z EventID=4625 TargetUser=admin1 Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=51201 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+2024-11-14T08:31:07Z EventID=4625 TargetUser=admin1 Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=51202 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+2024-11-14T08:31:12Z EventID=4625 TargetUser=admin1 Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=51203 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+2024-11-14T08:31:17Z EventID=4625 TargetUser=admin1 Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=51204 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+2024-11-14T08:31:22Z EventID=4625 TargetUser=admin1 Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=51205 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+2024-11-14T08:31:27Z EventID=4625 TargetUser=admin1 Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=51206 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+2024-11-14T08:31:32Z EventID=4625 TargetUser=admin1 Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=51207 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+2024-11-14T08:31:37Z EventID=4625 TargetUser=admin1 Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=51208 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+2024-11-14T08:31:42Z EventID=4625 TargetUser=admin1 Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=51209 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+2024-11-14T08:31:47Z EventID=4625 TargetUser=admin1 Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=51210 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+2024-11-14T08:31:52Z EventID=4625 TargetUser=admin1 Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=51211 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+2024-11-14T08:31:57Z EventID=4625 TargetUser=admin1 Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=51212 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+2024-11-14T08:32:02Z EventID=4625 TargetUser=admin1 Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=51213 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+2024-11-14T08:32:07Z EventID=4625 TargetUser=admin1 Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=51214 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+2024-11-14T08:32:12Z EventID=4625 TargetUser=admin1 Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=51215 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+2024-11-14T08:32:17Z EventID=4625 TargetUser=admin1 Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=51216 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+2024-11-14T08:32:22Z EventID=4625 TargetUser=admin1 Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=51217 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+2024-11-14T08:32:27Z EventID=4625 TargetUser=admin1 Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=51218 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+2024-11-14T08:32:32Z EventID=4625 TargetUser=admin1 Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=51219 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+2024-11-14T08:32:37Z EventID=4625 TargetUser=admin1 Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=51220 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+
+# NOTE: Scenario A ends here. 20 failures against admin1 in 95 seconds from a
+# single source IP. No EventID=4624 (successful logon) follows — attack failed
+# before lockout policy triggered (threshold: 30 failures / 10 min in lab GPO).
+
+# ------------------------------------------------------------------------------
+# SCENARIO B: Password Spray — Single source IP, multiple users, slow cadence
+# Pattern: one attempt per account every ~30 seconds — designed to stay under
+# per-account lockout thresholds while covering many accounts
+# ------------------------------------------------------------------------------
+
+2024-11-14T09:15:01Z EventID=4625 TargetUser=user1    Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=52001 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+2024-11-14T09:15:31Z EventID=4625 TargetUser=user2    Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=52002 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+2024-11-14T09:16:01Z EventID=4625 TargetUser=svc_account1 Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=52003 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+2024-11-14T09:16:31Z EventID=4625 TargetUser=analyst1 Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=52004 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+2024-11-14T09:17:01Z EventID=4625 TargetUser=user3    Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=52005 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+2024-11-14T09:17:31Z EventID=4625 TargetUser=helpdesk1 Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=52006 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+2024-11-14T09:18:01Z EventID=4625 TargetUser=admin1   Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=52007 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+2024-11-14T09:18:31Z EventID=4625 TargetUser=user4    Domain=LAB LogonType=3 SourceIP=203.0.113.10 SourcePort=52008 Status=0xC000006D SubStatus=0xC000006A WorkstationName=- FailureReason="Wrong password"
+
+# NOTE: Scenario B — 8 distinct accounts targeted from 203.0.113.10 over ~3.5
+# minutes, one attempt per account. No single account hit lockout threshold, but
+# cross-account aggregation reveals the spray pattern.

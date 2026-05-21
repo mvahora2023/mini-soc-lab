@@ -1,0 +1,65 @@
+# ==============================================================================
+# SYNTHETIC DATA — DO NOT USE IN PRODUCTION
+# All entries are fabricated for portfolio/lab demonstration only.
+# Sender domains: RFC 2606 (.example) — not real domains, not real IOCs
+# Source IPs: RFC 5737 documentation range (203.0.113.0/24)
+# Recipients: @lab.internal — non-routable synthetic domain
+# Attachment hashes: fabricated SHA-256 values, not real malware hashes
+# URLs: hosted on 203.0.113.99 (RFC 5737 documentation IP) — not real URLs
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# SCENARIO A: Spearphishing Attachment (T1566.001)
+# Campaign: Weaponised Excel file (.xlsm) targeting finance and IT roles
+# All four emails share the same attachment hash — evidence of a coordinated campaign
+# Gateway action: QUARANTINE on all (SPF/DKIM/DMARC all FAIL)
+# Time window: 09:10 – 09:24 UTC
+# ------------------------------------------------------------------------------
+
+2024-11-15T09:10:44Z Action=QUARANTINE MsgID=<20241115091044.A1B2C3@hr-documents.example> From=no-reply@hr-documents.example FromDisplay="HR Documents" To=user1@lab.internal Subject="Action Required: Q4 Compensation Review" SourceIP=203.0.113.20 SPF=FAIL DKIM=FAIL DMARC=FAIL DMARCPolicy=quarantine AttachmentCount=1 AttachmentName=Q4_Compensation_Review.xlsm AttachmentHash=3f4a8b2c1d9e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a URLCount=0 Verdict=SUSPICIOUS Reason="SPF_FAIL DKIM_FAIL macro_enabled_attachment"
+
+2024-11-15T09:13:17Z Action=QUARANTINE MsgID=<20241115091317.D4E5F6@hr-documents.example> From=no-reply@hr-documents.example FromDisplay="HR Documents" To=user2@lab.internal Subject="Action Required: Q4 Compensation Review" SourceIP=203.0.113.20 SPF=FAIL DKIM=FAIL DMARC=FAIL DMARCPolicy=quarantine AttachmentCount=1 AttachmentName=Q4_Compensation_Review.xlsm AttachmentHash=3f4a8b2c1d9e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a URLCount=0 Verdict=SUSPICIOUS Reason="SPF_FAIL DKIM_FAIL macro_enabled_attachment"
+
+2024-11-15T09:16:52Z Action=QUARANTINE MsgID=<20241115091652.G7H8I9@hr-documents.example> From=no-reply@hr-documents.example FromDisplay="HR Documents" To=analyst1@lab.internal Subject="Action Required: Q4 Compensation Review" SourceIP=203.0.113.20 SPF=FAIL DKIM=FAIL DMARC=FAIL DMARCPolicy=quarantine AttachmentCount=1 AttachmentName=Q4_Compensation_Review.xlsm AttachmentHash=3f4a8b2c1d9e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a URLCount=0 Verdict=SUSPICIOUS Reason="SPF_FAIL DKIM_FAIL macro_enabled_attachment"
+
+2024-11-15T09:19:08Z Action=QUARANTINE MsgID=<20241115091908.J1K2L3@hr-documents.example> From=no-reply@hr-documents.example FromDisplay="HR Documents" To=helpdesk1@lab.internal Subject="Action Required: Q4 Compensation Review" SourceIP=203.0.113.20 SPF=FAIL DKIM=FAIL DMARC=FAIL DMARCPolicy=quarantine AttachmentCount=1 AttachmentName=Q4_Compensation_Review.xlsm AttachmentHash=3f4a8b2c1d9e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a URLCount=0 Verdict=SUSPICIOUS Reason="SPF_FAIL DKIM_FAIL macro_enabled_attachment"
+
+2024-11-15T09:24:31Z Action=QUARANTINE MsgID=<20241115092431.M4N5O6@hr-documents.example> From=no-reply@hr-documents.example FromDisplay="HR Documents" To=user3@lab.internal Subject="Action Required: Q4 Compensation Review" SourceIP=203.0.113.20 SPF=FAIL DKIM=FAIL DMARC=FAIL DMARCPolicy=quarantine AttachmentCount=1 AttachmentName=Q4_Compensation_Review.xlsm AttachmentHash=3f4a8b2c1d9e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a URLCount=0 Verdict=SUSPICIOUS Reason="SPF_FAIL DKIM_FAIL macro_enabled_attachment"
+
+# NOTE: Scenario A — 5 emails, same attachment hash, 5 distinct recipients, 14-minute
+# window. Gateway quarantined all. No delivery occurred. No endpoint interaction.
+# The identical hash across all 5 messages confirms a single weaponised file was used.
+
+# ------------------------------------------------------------------------------
+# SCENARIO B: Spearphishing Link (T1566.002)
+# Campaign: Credential harvesting page impersonating internal IT portal
+# Gateway delivered all emails (SPF=SOFTFAIL only — no hard block policy)
+# Proxy logs show two users clicked the link after delivery
+# Time window: 14:30 – 14:44 UTC (email) + 14:38 – 14:41 UTC (clicks)
+# ------------------------------------------------------------------------------
+
+2024-11-15T14:30:19Z Action=DELIVERED MsgID=<20241115143019.P7Q8R9@accounts-portal.example> From=it-support@accounts-portal.example FromDisplay="IT Support Portal" To=user1@lab.internal Subject="Your account password expires in 24 hours - action required" SourceIP=203.0.113.21 SPF=SOFTFAIL DKIM=NONE DMARC=NONE DMARCPolicy=none AttachmentCount=0 URLCount=1 URL1="http://203.0.113.99/portal/reset-password?token=usr1_synthetic" Verdict=SUSPICIOUS Reason="SPF_SOFTFAIL lookalike_domain url_in_body"
+
+2024-11-15T14:32:44Z Action=DELIVERED MsgID=<20241115143244.S1T2U3@accounts-portal.example> From=it-support@accounts-portal.example FromDisplay="IT Support Portal" To=user2@lab.internal Subject="Your account password expires in 24 hours - action required" SourceIP=203.0.113.21 SPF=SOFTFAIL DKIM=NONE DMARC=NONE DMARCPolicy=none AttachmentCount=0 URLCount=1 URL1="http://203.0.113.99/portal/reset-password?token=usr2_synthetic" Verdict=SUSPICIOUS Reason="SPF_SOFTFAIL lookalike_domain url_in_body"
+
+2024-11-15T14:37:02Z Action=DELIVERED MsgID=<20241115143702.V4W5X6@accounts-portal.example> From=it-support@accounts-portal.example FromDisplay="IT Support Portal" To=analyst1@lab.internal Subject="Your account password expires in 24 hours - action required" SourceIP=203.0.113.21 SPF=SOFTFAIL DKIM=NONE DMARC=NONE DMARCPolicy=none AttachmentCount=0 URLCount=1 URL1="http://203.0.113.99/portal/reset-password?token=ana1_synthetic" Verdict=SUSPICIOUS Reason="SPF_SOFTFAIL lookalike_domain url_in_body"
+
+2024-11-15T14:39:55Z Action=DELIVERED MsgID=<20241115143955.Y7Z8A9@accounts-portal.example> From=it-support@accounts-portal.example FromDisplay="IT Support Portal" To=user3@lab.internal Subject="Your account password expires in 24 hours - action required" SourceIP=203.0.113.21 SPF=SOFTFAIL DKIM=NONE DMARC=NONE DMARCPolicy=none AttachmentCount=0 URLCount=1 URL1="http://203.0.113.99/portal/reset-password?token=usr3_synthetic" Verdict=SUSPICIOUS Reason="SPF_SOFTFAIL lookalike_domain url_in_body"
+
+2024-11-15T14:44:07Z Action=DELIVERED MsgID=<20241115144407.B1C2D3@accounts-portal.example> From=it-support@accounts-portal.example FromDisplay="IT Support Portal" To=helpdesk1@lab.internal Subject="Your account password expires in 24 hours - action required" SourceIP=203.0.113.21 SPF=SOFTFAIL DKIM=NONE DMARC=NONE DMARCPolicy=none AttachmentCount=0 URLCount=1 URL1="http://203.0.113.99/portal/reset-password?token=hd1_synthetic" Verdict=SUSPICIOUS Reason="SPF_SOFTFAIL lookalike_domain url_in_body"
+
+# NOTE: Scenario B — 5 emails delivered to inbox (gateway did not block on SOFTFAIL).
+# URL unique per recipient (token parameter) — adversary tracking who clicks.
+
+# ---- Proxy / URL click logs (captured after email delivery) ------------------
+# Format: Timestamp UserHost DestURL HTTPMethod ResponseCode BytesSent BytesRecv Verdict
+
+2024-11-15T14:38:12Z User=user2 SrcIP=192.0.2.102 DestURL="http://203.0.113.99/portal/reset-password?token=usr2_synthetic" Method=GET ResponseCode=200 BytesSent=512 BytesRecv=14820 URLCategory=UNCATEGORIZED ProxyVerdict=ALLOW Referrer=EMAIL_CLIENT
+2024-11-15T14:38:14Z User=user2 SrcIP=192.0.2.102 DestURL="http://203.0.113.99/portal/reset-password/submit" Method=POST ResponseCode=200 BytesSent=1240 BytesRecv=4096 URLCategory=UNCATEGORIZED ProxyVerdict=ALLOW Referrer="http://203.0.113.99/portal/reset-password?token=usr2_synthetic"
+2024-11-15T14:41:03Z User=user1 SrcIP=192.0.2.101 DestURL="http://203.0.113.99/portal/reset-password?token=usr1_synthetic" Method=GET ResponseCode=200 BytesSent=512 BytesRecv=14820 URLCategory=UNCATEGORIZED ProxyVerdict=ALLOW Referrer=EMAIL_CLIENT
+2024-11-15T14:41:06Z User=user1 SrcIP=192.0.2.101 DestURL="http://203.0.113.99/portal/reset-password/submit" Method=POST ResponseCode=200 BytesSent=1198 BytesRecv=4096 URLCategory=UNCATEGORIZED ProxyVerdict=ALLOW Referrer="http://203.0.113.99/portal/reset-password?token=usr1_synthetic"
+
+# CRITICAL NOTE: POST requests to /portal/reset-password/submit from user2 (14:38:14Z)
+# and user1 (14:41:06Z) indicate form submission — consistent with credential entry
+# on the harvesting page. Both accounts (user1, user2) should be treated as
+# potentially compromised and require immediate password reset + MFA check.
