@@ -1,0 +1,74 @@
+title: Spearphishing Attachment Execution via Office or Messaging Client
+id: b3c9d4e2-5f6a-4b78-9c0d-2e3f4a5b6c7d
+status: test
+description: >
+  Detects execution of suspicious processes spawned as child processes of common
+  email or messaging clients (Outlook, Teams, Thunderbird). This pattern indicates
+  a spearphishing attachment (T1566.001) or link (T1566.002) that triggered a
+  payload — commonly via macros, LNK files, or OLE objects embedded in documents.
+  The rule targets scripting engines, shell spawns, and download utilities that
+  have no legitimate reason to be child processes of mail clients.
+references:
+  - https://attack.mitre.org/techniques/T1566/
+  - https://attack.mitre.org/techniques/T1566/001/
+  - https://attack.mitre.org/techniques/T1566/002/
+  - https://www.microsoft.com/en-us/security/blog/2021/07/13/microsoft-discovers-threat-actor-targeting-solarwinds-orion-software/
+author: Mahmadarsh Vahora
+date: 2025-01-15
+modified: 2025-05-30
+tags:
+  - attack.initial_access
+  - attack.t1566
+  - attack.t1566.001
+  - attack.t1566.002
+  - attack.execution
+  - attack.t1204.002
+logsource:
+  category: process_creation
+  product: windows
+detection:
+  selection_parent:
+    ParentImage|endswith:
+      - '\OUTLOOK.EXE'
+      - '\outlook.exe'
+      - '\Teams.exe'
+      - '\Thunderbird.exe'
+      - '\thunderbird.exe'
+      - '\lync.exe'
+      - '\msteams.exe'
+  selection_suspicious_child:
+    Image|endswith:
+      - '\cmd.exe'
+      - '\powershell.exe'
+      - '\pwsh.exe'
+      - '\wscript.exe'
+      - '\cscript.exe'
+      - '\mshta.exe'
+      - '\certutil.exe'
+      - '\regsvr32.exe'
+      - '\rundll32.exe'
+      - '\bitsadmin.exe'
+      - '\curl.exe'
+      - '\wget.exe'
+      - '\wmic.exe'
+      - '\msiexec.exe'
+      - '\schtasks.exe'
+      - '\at.exe'
+  filter_outlook_update:
+    # Outlook spawns OfficeClickToRun as part of auto-update
+    Image|endswith: '\OfficeClickToRun.exe'
+  condition: selection_parent and selection_suspicious_child and not filter_outlook_update
+falsepositives:
+  - Automated IT workflows triggered through mail-delivered scripts (rare, should be allowlisted by hash)
+  - Some enterprise DLP or archiving solutions inject into Outlook and may spawn helper processes
+  - Teams integration webhooks in specific enterprise configurations
+level: high
+fields:
+  - Image
+  - ParentImage
+  - CommandLine
+  - ParentCommandLine
+  - User
+  - ProcessId
+  - ParentProcessId
+  - Hashes

@@ -1,0 +1,207 @@
+{
+  "name": "Mini SOC Lab — Detection Coverage",
+  "versions": {
+    "attack": "14",
+    "navigator": "4.9",
+    "layer": "4.5"
+  },
+  "domain": "enterprise-attack",
+  "description": "Detection coverage layer for the Mini SOC Lab portfolio project. Green = detected with documented evidence. Red = identified gap with no current detection rule.",
+  "filters": {
+    "platforms": ["Windows"]
+  },
+  "sorting": 0,
+  "layout": {
+    "layout": "side",
+    "aggregateFunction": "average",
+    "showID": true,
+    "showName": true,
+    "showAggregateScores": false,
+    "countUnscored": false
+  },
+  "hideDisabled": false,
+  "techniques": [
+    {
+      "techniqueID": "T1110",
+      "tactic": "credential-access",
+      "color": "#4CAF50",
+      "comment": "DETECTED — EventID 4625 with SubStatus 0xC000006A, threshold >5 failures/5 min. Also T1110.001 (Password Guessing) via EventID 4771 Kerberos pre-auth failure. Coverage confidence: Medium.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1110.001",
+      "tactic": "credential-access",
+      "color": "#4CAF50",
+      "comment": "DETECTED — Password Guessing detected via EventID 4625 SubStatus 0xC000006A. Detection threshold: >5 failures in 5 minutes against a single account.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1566",
+      "tactic": "initial-access",
+      "color": "#4CAF50",
+      "comment": "DETECTED — Email header analysis (SPF/DKIM/DMARC fail), attachment hash matching, sender domain age check via WHOIS. Coverage confidence: Low-Medium.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": true
+    },
+    {
+      "techniqueID": "T1566.001",
+      "tactic": "initial-access",
+      "color": "#4CAF50",
+      "comment": "DETECTED — Spearphishing Attachment: .docm/.xlsm/.lnk/.iso extension detection, SHA256 hash comparison against threat intel feed.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1566.002",
+      "tactic": "initial-access",
+      "color": "#4CAF50",
+      "comment": "DETECTED — Spearphishing Link: URL redirector detection, recently registered domain check, display text vs href mismatch.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1059.001",
+      "tactic": "execution",
+      "color": "#4CAF50",
+      "comment": "DETECTED — PowerShell: EventID 4104 ScriptBlock logging enabled. Detection pattern: FromBase64String OR Invoke-Expression OR -EncodedCommand in ScriptBlockText. Coverage confidence: Medium (requires ScriptBlock logging GPO).",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1027",
+      "tactic": "defense-evasion",
+      "color": "#4CAF50",
+      "comment": "DETECTED — Obfuscated Files/Information: EventID 4104 combined with Base64/IEX/DownloadString patterns. Detected in conjunction with T1059.001.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1078",
+      "tactic": "defense-evasion",
+      "color": "#F44336",
+      "comment": "GAP — Valid Accounts: No behavioral baseline established for account usage anomalies. Legitimate credentials used maliciously would not trigger any current detection rule.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1055",
+      "tactic": "defense-evasion",
+      "color": "#F44336",
+      "comment": "GAP — Process Injection: No Sysmon or EDR in lab environment. EventID-only detection cannot observe memory injection without kernel-level hooks.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1003",
+      "tactic": "credential-access",
+      "color": "#F44336",
+      "comment": "GAP — OS Credential Dumping: No Sysmon Event 10 (lsass access monitoring) configured. LSASS memory reads by unauthorized processes are not detected.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1021.001",
+      "tactic": "lateral-movement",
+      "color": "#F44336",
+      "comment": "GAP — Remote Desktop Protocol: No correlation rule for EventID 4648 (explicit credentials) + 4624 (logon Type 10) to detect RDP lateral movement from compromised hosts.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1071",
+      "tactic": "command-and-control",
+      "color": "#F44336",
+      "comment": "GAP — Application Layer Protocol C2: No network traffic analysis or proxy logs in lab environment. HTTP/HTTPS C2 traffic would not be detected.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1547.001",
+      "tactic": "persistence",
+      "color": "#F44336",
+      "comment": "GAP — Registry Run Keys: No registry change monitoring configured. HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run modifications are not audited.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1053.005",
+      "tactic": "execution",
+      "color": "#F44336",
+      "comment": "GAP — Scheduled Task: Task Scheduler event log (Microsoft-Windows-TaskScheduler/Operational) is not reviewed. Malicious scheduled tasks are not detected.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1486",
+      "tactic": "impact",
+      "color": "#F44336",
+      "comment": "GAP — Data Encrypted for Impact (Ransomware): No file system monitoring for mass encryption behavior. No honeypot files or canary directory configured.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    },
+    {
+      "techniqueID": "T1041",
+      "tactic": "exfiltration",
+      "color": "#F44336",
+      "comment": "GAP — Exfiltration Over C2 Channel: No DLP tools, no network egress monitoring, no data volume baselining. Exfiltration via established C2 channel is completely undetected.",
+      "enabled": true,
+      "metadata": [],
+      "links": [],
+      "showSubtechniques": false
+    }
+  ],
+  "gradient": {
+    "colors": ["#ff6666", "#ffe766", "#8ec843"],
+    "minValue": 0,
+    "maxValue": 100
+  },
+  "legendItems": [
+    {
+      "label": "Detected — documented evidence in attack_chain_analysis.md",
+      "color": "#4CAF50"
+    },
+    {
+      "label": "Gap — no current detection rule; remediation needed",
+      "color": "#F44336"
+    }
+  ],
+  "metadata": [],
+  "links": [],
+  "showTacticRowBackground": true,
+  "tacticRowBackground": "#dddddd",
+  "selectTechniquesAcrossTactics": true,
+  "selectSubtechniquesWithParent": false,
+  "selectVisibleTechniques": false
+}

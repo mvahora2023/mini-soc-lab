@@ -1,0 +1,58 @@
+title: Windows Brute Force Attack via Failed Logon Threshold
+id: a7f8c2d1-3e4b-4f56-8a9c-1b2d3e4f5a6b
+status: test
+description: >
+  Detects credential brute force or password spray activity by identifying
+  five or more failed logon attempts (EventID 4625) or Kerberos pre-authentication
+  failures (EventID 4771) from the same source IP within a five-minute window.
+  SubStatus 0xC000006A filters for bad password attempts specifically, reducing
+  noise from account-not-found errors. Maps to MITRE ATT&CK T1110 (Brute Force).
+references:
+  - https://attack.mitre.org/techniques/T1110/
+  - https://docs.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4625
+  - https://docs.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4771
+author: Mahmadarsh Vahora
+date: 2025-01-15
+modified: 2025-05-30
+tags:
+  - attack.credential_access
+  - attack.t1110
+  - attack.t1110.001
+  - attack.t1110.003
+logsource:
+  product: windows
+  service: security
+detection:
+  selection_4625:
+    EventID: 4625
+    SubStatus:
+      - '0xC000006A'   # Wrong password
+      - '0xC0000064'   # User name does not exist (include for spray detection)
+    LogonType:
+      - 2    # Interactive
+      - 3    # Network
+      - 10   # RemoteInteractive (RDP)
+  selection_4771:
+    EventID: 4771
+    Status: '0x18'     # Wrong password (Kerberos pre-auth)
+  filter_machine_accounts:
+    SubjectUserName|endswith: '$'
+  timeframe: 5m
+  condition: >
+    (selection_4625 and not filter_machine_accounts) | count(IpAddress) by IpAddress > 5
+    or (selection_4771 and not filter_machine_accounts) | count(IpAddress) by IpAddress > 5
+falsepositives:
+  - Misconfigured applications repeatedly attempting authentication with a stale credential
+  - Legitimate password policy enforcement tools or security scanners
+  - Help desk bulk password reset operations generating multiple failures
+  - Kerberos ticket renewal edge cases on some domain configurations
+level: high
+fields:
+  - EventID
+  - IpAddress
+  - TargetUserName
+  - SubjectUserName
+  - LogonType
+  - SubStatus
+  - WorkstationName
+  - ProcessName

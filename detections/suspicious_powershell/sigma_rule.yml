@@ -1,0 +1,113 @@
+title: Obfuscated or Suspicious PowerShell Execution via ScriptBlock Logging
+id: c4d0e5f3-6a7b-4c89-ad1e-3f4a5b6c7d8e
+status: test
+description: >
+  Detects obfuscated PowerShell execution (T1027) and suspicious PowerShell
+  commands (T1059.001) using Windows ScriptBlock logging (EventID 4104).
+  Targets common obfuscation patterns including Base64-encoded commands (-EncodedCommand),
+  character substitution, tick obfuscation, and known malicious cmdlet patterns
+  (Invoke-Expression, DownloadString, IEX, reflection-based loading).
+  Requires PowerShell ScriptBlock logging enabled via Group Policy:
+  Computer Configuration > Administrative Templates > Windows Components >
+  Windows PowerShell > Turn on PowerShell Script Block Logging.
+references:
+  - https://attack.mitre.org/techniques/T1059/001/
+  - https://attack.mitre.org/techniques/T1027/
+  - https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_logging_windows
+  - https://www.fireeye.com/blog/threat-research/2016/02/greater_visibilityt.html
+author: Mahmadarsh Vahora
+date: 2025-01-15
+modified: 2025-05-30
+tags:
+  - attack.execution
+  - attack.t1059.001
+  - attack.defense_evasion
+  - attack.t1027
+  - attack.t1140
+logsource:
+  product: windows
+  service: powershell
+  definition: >
+    Requires PowerShell ScriptBlock Logging enabled.
+    EventID 4104 is generated for every script block executed.
+    Enable via: HKLM\SOFTWARE\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging -> EnableScriptBlockLogging = 1
+detection:
+  selection_eventid:
+    EventID: 4104
+  selection_encoded:
+    # Base64 encoded command execution
+    ScriptBlockText|contains:
+      - '-EncodedCommand'
+      - '-EncodedC'
+      - '-Enc '
+      - '-EC '
+  selection_download:
+    # Download cradles commonly used in malicious PS
+    ScriptBlockText|contains:
+      - 'DownloadString'
+      - 'DownloadFile'
+      - 'DownloadData'
+      - 'WebClient'
+      - 'Invoke-WebRequest'
+      - 'iwr '
+      - 'curl '
+      - 'wget '
+      - 'Net.WebClient'
+      - 'BitsTransfer'
+  selection_iex:
+    # Invoke-Expression and aliases used to execute downloaded or obfuscated content
+    ScriptBlockText|contains:
+      - 'Invoke-Expression'
+      - '| IEX'
+      - '|IEX'
+      - 'IEX('
+      - 'iex('
+      - '.Invoke()'
+  selection_obfuscation:
+    # Character-level obfuscation patterns
+    ScriptBlockText|contains:
+      - '[char]'
+      - '[Convert]::FromBase64'
+      - 'ToBase64String'
+      - '-join'
+      - '[string]::join'
+      - '-replace'
+  selection_suspicious_cmdlets:
+    ScriptBlockText|contains:
+      - 'Add-MpPreference'          # Defender exclusion manipulation
+      - 'Set-MpPreference'          # Defender disable
+      - 'Suspend-BitLocker'         # BitLocker manipulation
+      - 'Invoke-Mimikatz'
+      - 'sekurlsa'
+      - 'lsadump'
+      - 'Get-GPPPassword'
+      - 'Invoke-Shellcode'
+      - 'Invoke-ReflectivePEInjection'
+      - 'AmsiUtils'                 # AMSI bypass
+      - 'amsiInitFailed'            # AMSI bypass
+  filter_legitimate_admin:
+    # Filter known admin scripts by script path (tune to environment)
+    Path|startswith:
+      - 'C:\Windows\System32\WindowsPowerShell\v1.0\Modules\'
+      - 'C:\Program Files\WindowsPowerShell\Modules\'
+  condition: >
+    selection_eventid and (
+      selection_encoded
+      or selection_download
+      or (selection_iex and not filter_legitimate_admin)
+      or selection_obfuscation
+      or selection_suspicious_cmdlets
+    )
+falsepositives:
+  - SCCM/MECM deployments using encoded PowerShell for package installation
+  - Legitimate administrative scripts using Invoke-Expression for dynamic module loading
+  - Security tooling (CrowdStrike, SentinelOne response scripts) may use encoded commands
+  - Some third-party backup or monitoring agents use WebClient for telemetry
+level: high
+fields:
+  - EventID
+  - ScriptBlockText
+  - ScriptBlockId
+  - Path
+  - User
+  - ComputerName
