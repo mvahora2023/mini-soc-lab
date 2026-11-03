@@ -1,24 +1,21 @@
-title: Windows Brute Force Attack via Failed Logon Threshold
+title: Windows Failed Authentication Events
+name: windows_failed_authentication_events
 id: a7f8c2d1-3e4b-4f56-8a9c-1b2d3e4f5a6b
 status: test
 description: >
-  Detects credential brute force or password spray activity by identifying
-  five or more failed logon attempts (EventID 4625) or Kerberos pre-authentication
-  failures (EventID 4771) from the same source IP within a five-minute window.
-  SubStatus 0xC000006A filters for bad password attempts specifically, reducing
-  noise from account-not-found errors. Maps to MITRE ATT&CK T1110 (Brute Force).
-references:
-  - https://attack.mitre.org/techniques/T1110/
-  - https://docs.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4625
-  - https://docs.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4771
+  Windows 4625 and 4771 authentication failures that can be aggregated by source
+  address. This base rule is an event selector and does not by itself indicate
+  a brute-force attack. Correlation below supplies a rate threshold.
 author: Mahmadarsh Vahora
 date: 2025-01-15
-modified: 2025-05-30
+modified: 2026-11-03
+references:
+  - https://attack.mitre.org/techniques/T1110/
+  - https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4625
+  - https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4771
 tags:
   - attack.credential_access
   - attack.t1110
-  - attack.t1110.001
-  - attack.t1110.003
 logsource:
   product: windows
   service: security
@@ -26,33 +23,54 @@ detection:
   selection_4625:
     EventID: 4625
     SubStatus:
-      - '0xC000006A'   # Wrong password
-      - '0xC0000064'   # User name does not exist (include for spray detection)
-    LogonType:
-      - 2    # Interactive
-      - 3    # Network
-      - 10   # RemoteInteractive (RDP)
+      - '0xC000006A'
+      - '0xC0000064'
   selection_4771:
     EventID: 4771
-    Status: '0x18'     # Wrong password (Kerberos pre-auth)
+    Status: '0x18'
   filter_machine_accounts:
-    SubjectUserName|endswith: '$'
-  timeframe: 5m
-  condition: >
-    (selection_4625 and not filter_machine_accounts) | count(IpAddress) by IpAddress > 5
-    or (selection_4771 and not filter_machine_accounts) | count(IpAddress) by IpAddress > 5
+    TargetUserName|endswith: '$'
+  filter_local:
+    IpAddress:
+      - '-'
+      - '127.0.0.1'
+      - '::1'
+  condition: (selection_4625 or selection_4771) and not 1 of filter_*
 falsepositives:
-  - Misconfigured applications repeatedly attempting authentication with a stale credential
-  - Legitimate password policy enforcement tools or security scanners
-  - Help desk bulk password reset operations generating multiple failures
-  - Kerberos ticket renewal edge cases on some domain configurations
-level: high
+  - Cached or outdated credentials
+  - Benign monitoring or scheduled service activity
+level: low
 fields:
   - EventID
   - IpAddress
   - TargetUserName
-  - SubjectUserName
-  - LogonType
   - SubStatus
-  - WorkstationName
-  - ProcessName
+---
+title: Repeated Failed Windows Authentication From One Source IP
+id: f7a4054e-6a8a-4a94-9d13-b31c0d2bbf86
+status: test
+description: >
+  Six or more matching Windows authentication failures sharing the same source
+  IP address within five minutes. This is a threshold-based lead, not proof
+  of compromise or of password spraying specifically.
+author: Mahmadarsh Vahora
+date: 2026-11-03
+references:
+  - https://sigmahq.io/docs/meta/correlations
+  - https://attack.mitre.org/techniques/T1110/
+tags:
+  - attack.credential_access
+  - attack.t1110
+correlation:
+  type: event_count
+  rules:
+    - windows_failed_authentication_events
+  group-by:
+    - IpAddress
+  timespan: 5m
+  condition:
+    gte: 6
+falsepositives:
+  - Misconfigured services repeatedly trying expired credentials
+  - Approved password audit tools
+level: high
