@@ -5,7 +5,6 @@
 ![MITRE ATT&CK](https://img.shields.io/badge/MITRE%20ATT%26CK-Enterprise-red)
 ![Sigma](https://img.shields.io/badge/Sigma-Rules-orange)
 ![Detection Engineering](https://img.shields.io/badge/Detection-Engineering-blue)
-![Security+](https://img.shields.io/badge/CompTIA-Security%2B-red)
 
 A detection engineering portfolio built around three real-world attack scenarios. Each use case includes simulated log data, a Sigma detection rule, a structured triage report, an incident response playbook, and MITRE ATT&CK coverage mapping.
 
