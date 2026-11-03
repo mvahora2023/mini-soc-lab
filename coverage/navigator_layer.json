@@ -6,9 +6,11 @@
     "layer": "4.5"
   },
   "domain": "enterprise-attack",
-  "description": "Detection coverage layer for the Mini SOC Lab portfolio project. Green = detected with documented evidence. Red = identified gap with no current detection rule.",
+  "description": "Portfolio-only ATT&CK technique mapping. Green indicates a documented synthetic scenario or rule mapping, not validated production detection coverage. Red indicates a documented coverage gap.",
   "filters": {
-    "platforms": ["Windows"]
+    "platforms": [
+      "Windows"
+    ]
   },
   "sorting": 0,
   "layout": {
@@ -25,7 +27,7 @@
       "techniqueID": "T1110",
       "tactic": "credential-access",
       "color": "#4CAF50",
-      "comment": "DETECTED — EventID 4625 with SubStatus 0xC000006A, threshold >5 failures/5 min. Also T1110.001 (Password Guessing) via EventID 4771 Kerberos pre-auth failure. Coverage confidence: Medium.",
+      "comment": "DOCUMENTED SAMPLE — EventID 4625 with SubStatus 0xC000006A, threshold >5 failures/5 min. Also T1110.001 (Password Guessing) via EventID 4771 Kerberos pre-auth failure. Documented example confidence: Medium.",
       "enabled": true,
       "metadata": [],
       "links": [],
@@ -35,7 +37,7 @@
       "techniqueID": "T1110.001",
       "tactic": "credential-access",
       "color": "#4CAF50",
-      "comment": "DETECTED — Password Guessing detected via EventID 4625 SubStatus 0xC000006A. Detection threshold: >5 failures in 5 minutes against a single account.",
+      "comment": "DOCUMENTED SAMPLE — Password Guessing detected via EventID 4625 SubStatus 0xC000006A. Detection threshold: >5 failures in 5 minutes against a single account.",
       "enabled": true,
       "metadata": [],
       "links": [],
@@ -45,7 +47,7 @@
       "techniqueID": "T1566",
       "tactic": "initial-access",
       "color": "#4CAF50",
-      "comment": "DETECTED — Email header analysis (SPF/DKIM/DMARC fail), attachment hash matching, sender domain age check via WHOIS. Coverage confidence: Low-Medium.",
+      "comment": "DOCUMENTED SAMPLE — Email header analysis (SPF/DKIM/DMARC fail), attachment hash matching, sender domain age check via WHOIS. Documented example confidence: Low-Medium.",
       "enabled": true,
       "metadata": [],
       "links": [],
@@ -55,7 +57,7 @@
       "techniqueID": "T1566.001",
       "tactic": "initial-access",
       "color": "#4CAF50",
-      "comment": "DETECTED — Spearphishing Attachment: .docm/.xlsm/.lnk/.iso extension detection, SHA256 hash comparison against threat intel feed.",
+      "comment": "DOCUMENTED SAMPLE — Spearphishing Attachment: .docm/.xlsm/.lnk/.iso extension detection, SHA256 hash comparison against threat intel feed.",
       "enabled": true,
       "metadata": [],
       "links": [],
@@ -65,7 +67,7 @@
       "techniqueID": "T1566.002",
       "tactic": "initial-access",
       "color": "#4CAF50",
-      "comment": "DETECTED — Spearphishing Link: URL redirector detection, recently registered domain check, display text vs href mismatch.",
+      "comment": "DOCUMENTED SAMPLE — Spearphishing Link: URL redirector detection, recently registered domain check, display text vs href mismatch.",
       "enabled": true,
       "metadata": [],
       "links": [],
@@ -75,7 +77,7 @@
       "techniqueID": "T1059.001",
       "tactic": "execution",
       "color": "#4CAF50",
-      "comment": "DETECTED — PowerShell: EventID 4104 ScriptBlock logging enabled. Detection pattern: FromBase64String OR Invoke-Expression OR -EncodedCommand in ScriptBlockText. Coverage confidence: Medium (requires ScriptBlock logging GPO).",
+      "comment": "DOCUMENTED SAMPLE — PowerShell: EventID 4104 ScriptBlock logging enabled. Detection pattern: FromBase64String OR Invoke-Expression OR -EncodedCommand in ScriptBlockText. Documented example confidence: Medium (requires ScriptBlock logging GPO).",
       "enabled": true,
       "metadata": [],
       "links": [],
@@ -85,7 +87,7 @@
       "techniqueID": "T1027",
       "tactic": "defense-evasion",
       "color": "#4CAF50",
-      "comment": "DETECTED — Obfuscated Files/Information: EventID 4104 combined with Base64/IEX/DownloadString patterns. Detected in conjunction with T1059.001.",
+      "comment": "DOCUMENTED SAMPLE — Obfuscated Files/Information: EventID 4104 combined with Base64/IEX/DownloadString patterns. Detected in conjunction with T1059.001.",
       "enabled": true,
       "metadata": [],
       "links": [],
@@ -183,7 +185,11 @@
     }
   ],
   "gradient": {
-    "colors": ["#ff6666", "#ffe766", "#8ec843"],
+    "colors": [
+      "#ff6666",
+      "#ffe766",
+      "#8ec843"
+    ],
     "minValue": 0,
     "maxValue": 100
   },
