@@ -16,9 +16,9 @@ A detection engineering portfolio built around three real-world attack scenarios
 
 | ID | Technique | MITRE ID | Status |
 |---|---|---|---|
-| BF-001 | Brute Force — Password Spraying | T1110 / T1110.001 / T1110.003 | Detected |
-| PH-001 | Phishing — Spearphishing Attachment | T1566 / T1566.001 | Detected |
-| PS-001 | PowerShell Execution + Obfuscation | T1059.001 / T1027 / T1105 / T1087 / T1482 | Detected |
+| BF-001 | Failed authentication burst (illustrative brute-force scenario) | T1110 | Simulated; 6+ failures / 5m / IP |
+| PH-001 | Phishing-related suspicious process creation | T1566 / T1566.001 | Simulated |
+| PS-001 | Suspicious PowerShell script block patterns | T1059.001 / T1027 | Simulated |
 
 ---
 
@@ -68,7 +68,7 @@ mini-soc-lab/
 
 ## Detection Rules
 
-Each use case ships a valid [Sigma](https://github.com/SigmaHQ/sigma) rule ready for conversion to your target SIEM platform.
+Each case includes a [Sigma](https://github.com/SigmaHQ/sigma) rule. The brute-force scenario now uses the current **base-rule + event_count correlation** structure. GitHub Actions validates YAML and representative synthetic evidence, but successful conversion and detection efficacy depend on the chosen backend and actual log field mappings. Test correlations before real-world use. See the [Sigma correlation reference](https://sigmahq.io/docs/meta/correlations).
 
 ```bash
 # Convert to Splunk SPL using sigma-cli
