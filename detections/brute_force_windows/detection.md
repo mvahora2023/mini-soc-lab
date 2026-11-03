@@ -6,8 +6,14 @@ Identify authentication brute force attempts against Windows systems by detectin
 an abnormal volume of EventID 4625 (failed logon) events within a short time
 window, grouped by source IP and/or target user.
 
-Two distinct sub-patterns are detected separately because their aggregation keys
-and tuning thresholds differ:
+**Implementation status (November 2026):** The committed Sigma YAML implements a
+single source-IP event-count correlation: **6 or more selected Windows 4625/4771
+failures within 5 minutes**. It does **not** yet distinguish guessing against one
+account from spraying across many accounts. The two variants below are separate
+research/pseudocode designs, not implemented Sigma correlations.
+
+The two proposed behavioral patterns have different aggregation keys and tuning
+thresholds:
 
 | Variant | Aggregation Key | Behavioral Signal |
 |---------|----------------|-------------------|
