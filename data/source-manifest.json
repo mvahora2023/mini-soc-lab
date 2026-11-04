@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "project": "mini-soc-lab",
+  "synthetic": {
+    "source": "Synthetic detection scenarios and sample alerts",
+    "mode": "default"
+  },
+  "public": [
+    {
+      "id": "kev",
+      "label": "CISA KEV catalog",
+      "type": "kev"
+    },
+    {
+      "id": "nist",
+      "label": "NIST CSF 2.0 functions",
+      "type": "nist"
+    }
+  ],
+  "localData": {
+    "enabled": false,
+    "fileImport": false,
+    "privateAccounts": false,
+    "deviceAccess": false
+  },
+  "dataPolicy": "No mixing of reference records into fictional KPI counts; source and retrieval date displayed; public fetch only on explicit click."
+}
