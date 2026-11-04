@@ -105,7 +105,7 @@ was required.
 | Scenario A outbound IP | `203.0.113.99` | RFC 5737 documentation IP (synthetic); payload download host |
 | Scenario A outbound port | 80 (HTTP) | Unencrypted; payload visible to proxy if TLS inspection not required |
 | Scenario A process path | `C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe` | System PowerShell; not a renamed copy |
-| Scenario A working directory | `C:\Users\user1\AppData\Local\Temp\` (inferred) | Temp directory execution is a staging indicator |
+| Scenario A working directory | `C:\Users\SampleUser\AppData\Local\Temp\` (inferred) | Temp directory execution is a staging indicator |
 | Scenario B parent | `C:\Windows\System32\svchost.exe` (PID 0x0340) | Task Scheduler service host |
 
 In a real SOC, the Sysmon network connection event (Event 4) would allow immediate
@@ -195,7 +195,7 @@ TimeCreated=2024-11-18T10:23:09.441Z EventID=4688 Computer=WORKSTATION-01
 Image=C:\Windows\System32\cmd.exe
 ParentImage=C:\Program Files\Microsoft Office\Office16\WINWORD.EXE
 CommandLine=cmd.exe /c powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -NonInteractive -EncodedCommand aQBlAHgA...
-ParentCommandLine="WINWORD.EXE" /n "C:\Users\user1\Downloads\Q4_Bonus_Statement.docm"
+ParentCommandLine="WINWORD.EXE" /n "C:\Users\SampleUser\Downloads\Q4_Bonus_Statement.docm"
 ```
 
 **Scenario A — 4104 Script Block (decoded download cradle):**
